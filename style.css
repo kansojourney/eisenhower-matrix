@@ -90,6 +90,28 @@ a {
 .add-task button:hover {
     background-color: #486182;
 }
+/* Styles pour l'icône de suppression */
+.task {
+    position: relative;
+}
+
+.delete-icon {
+    position: absolute;
+    right: 10px;
+    font-size: 18px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.task:hover .delete-icon {
+    opacity: 0.5;
+}
+
+.delete-icon:hover {
+    opacity: 1;
+    color: red;
+}
 
 @media (max-width: 600px) {
     .matrix {
