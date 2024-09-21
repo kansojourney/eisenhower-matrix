@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const columns = document.querySelectorAll('.column');
+    let currentlyEditingTask = null; // Variable pour suivre la tâche en cours d'édition
 
     // Charger les tâches depuis le LocalStorage
     loadTasks();
@@ -14,10 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.key === 'Enter') addTask(column, input, taskList);
         });
     });
-
-    let isEditing = false;
-    let currentEditTask = null;
-    let currentEditInput = null;
 
     function addTask(column, input, taskList) {
         if (input.value.trim() === '') return;
@@ -38,7 +35,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.checked = completed;
-        checkbox.addEventListener('change', () => {
+        checkbox.addEventListener('change', (e) => {
+            e.stopPropagation(); // Empêcher la propagation du clic
             task.classList.toggle('completed');
             saveTasks();
         });
@@ -46,10 +44,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const span = document.createElement('span');
         span.textContent = text;
 
-        // Gestion de l'édition
-        span.addEventListener('click', (e) => {
+        // Gestion de l'édition en cliquant sur toute la tâche
+        task.addEventListener('click', (e) => {
             e.stopPropagation();
-            enterEditMode(task, span);
+            const currentSpan = task.querySelector('span');
+            enterEditMode(task, currentSpan);
         });
 
         // Créer l'icône de poubelle
@@ -58,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteIcon.innerHTML = '&times;';
 
         deleteIcon.addEventListener('click', (e) => {
-            e.stopPropagation();
+            e.stopPropagation(); // Empêcher la propagation du clic
             task.remove();
             saveTasks();
         });
@@ -74,12 +73,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function enterEditMode(task, span) {
-        if (isEditing) {
-            exitEditMode(currentEditTask, currentEditInput, false);
+        // Quitter le mode édition de la tâche précédente
+        if (currentlyEditingTask && currentlyEditingTask !== task) {
+            const input = currentlyEditingTask.querySelector('input[type="text"]');
+            if (input) {
+                // Annuler les modifications sur la tâche précédente
+                exitEditMode(currentlyEditingTask, input, false, currentlyEditingTask.onClickOutside);
+            }
         }
-
-        isEditing = true;
-        currentEditTask = task;
 
         const originalText = span.textContent;
 
@@ -96,62 +97,56 @@ document.addEventListener('DOMContentLoaded', () => {
         task.replaceChild(input, span);
         input.focus();
 
+        // Mettre à jour la tâche actuellement en édition
+        currentlyEditingTask = task;
+
+        // Gestion de l'annulation lors du clic en dehors
+        const onClickOutside = function(e) {
+            if (!task.contains(e.target)) {
+                exitEditMode(task, input, false, onClickOutside);
+            }
+        };
+
+        // Stocker la fonction sur la tâche pour y accéder lors de la sortie du mode édition
+        task.onClickOutside = onClickOutside;
+
+        document.addEventListener('click', onClickOutside);
+
         // Gestion de la sauvegarde lors de l'appui sur Entrée
         input.addEventListener('keypress', function onKeyPress(e) {
             if (e.key === 'Enter') {
-                exitEditMode(task, input, true);
+                exitEditMode(task, input, true, onClickOutside);
             }
         });
-
-        // Gestion de l'annulation lors du clic en dehors
-        function onClickOutside(e) {
-            if (!task.contains(e.target)) {
-                exitEditMode(task, input, false);
-            }
-        }
-
-        document.addEventListener('click', onClickOutside);
 
         // Empêcher la propagation du clic à la tâche
         input.addEventListener('click', (e) => {
             e.stopPropagation();
         });
+    }
 
-        currentEditInput = input;
+    function exitEditMode(task, input, save, onClickOutside) {
+        const newText = input.value.trim();
+        const span = document.createElement('span');
 
-        // Supprimer l'écouteur lors de la sortie du mode édition
-        function exitEditMode(task, input, save) {
-            const newText = input.value.trim();
-            const span = document.createElement('span');
-
-            if (save && newText !== '') {
-                span.textContent = newText;
-            } else {
-                // Récupérer le texte original depuis l'attribut de données
-                span.textContent = input.dataset.originalText;
-            }
-
-            // Réattacher l'événement de clic pour l'édition
-            span.addEventListener('click', (e) => {
-                e.stopPropagation();
-                enterEditMode(task, span);
-            });
-
-            task.replaceChild(span, input);
-
-            // Réinitialiser les variables d'édition
-            isEditing = false;
-            currentEditTask = null;
-            currentEditInput = null;
-
-            // Supprimer l'écouteur d'événement du document
-            document.removeEventListener('click', onClickOutside);
-
-            saveTasks();
+        if (save && newText !== '') {
+            span.textContent = newText;
+        } else {
+            // Récupérer le texte original depuis l'attribut de données
+            span.textContent = input.dataset.originalText;
         }
 
-        // Redéfinir exitEditMode pour avoir accès à onClickOutside
-        task.exitEditMode = exitEditMode;
+        task.replaceChild(span, input);
+
+        // Supprimer l'écouteur d'événement du document
+        document.removeEventListener('click', onClickOutside);
+
+        // Réinitialiser la tâche actuellement en édition si c'est celle-ci
+        if (currentlyEditingTask === task) {
+            currentlyEditingTask = null;
+        }
+
+        saveTasks();
     }
 
     let draggedTask = null;
