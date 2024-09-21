@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Matrice d'Eisenhower</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <img src="https://media.beehiiv.com/cdn-cgi/image/fit=scale-down,format=auto,onerror=redirect,quality=80/uploads/publication/logo/e365449a-8fb8-4821-b005-210f0143b72b/k.gif" alt="Logo Kanso Journey" class="logo">
+    <h1>Matrice d'Eisenhower</h1>
+  <h3>Un outil de <a href="https://kanso.beehiiv.com/" target="_blank">Kanso Journey</a> pour une vie productive et intentionnelle.</H3>
+  <p>Listez vos tâches. Déplacez-les d'une catégorie à l'autre selon vos besoins. Cochez les lorsqu'elles sont accomplies.</p>
+    <div class="matrix">
+        <div class="column" data-column="important-urgent">
+            <h2>Important & Urgent</h2>
+            <div class="task-list"></div>
+            <div class="add-task">
+                <input type="text" placeholder="Nouvelle tâche...">
+                <button>Ajouter</button>
+            </div>
+        </div>
+        <div class="column" data-column="important-not-urgent">
+            <h2>Important & Pas Urgent</h2>
+            <div class="task-list"></div>
+            <div class="add-task">
+                <input type="text" placeholder="Nouvelle tâche...">
+                <button>Ajouter</button>
+            </div>
+        </div>
+        <div class="column" data-column="not-important-urgent">
+            <h2>Pas Important & Urgent</h2>
+            <div class="task-list"></div>
+            <div class="add-task">
+                <input type="text" placeholder="Nouvelle tâche...">
+                <button>Ajouter</button>
+            </div>
+        </div>
+        <div class="column" data-column="not-important-not-urgent">
+            <h2>Pas Important & Pas Urgent</h2>
+            <div class="task-list"></div>
+            <div class="add-task">
+                <input type="text" placeholder="Nouvelle tâche...">
+                <button>Ajouter</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
