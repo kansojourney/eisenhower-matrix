@@ -112,6 +112,21 @@ a {
     opacity: 1;
     color: red;
 }
+/* Styles pour le champ d'édition */
+.edit-input {
+    flex: 1;
+    padding: 5px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* Empêcher le déplacement des tâches en mode édition */
+.task.dragging {
+    pointer-events: none;
+}
+
+
 
 @media (max-width: 600px) {
     .matrix {
