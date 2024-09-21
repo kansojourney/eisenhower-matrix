@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://kansojourney.github.io/eisenhower-matrix/sitemap.xml
