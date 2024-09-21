@@ -41,14 +41,18 @@ document.addEventListener('DOMContentLoaded', () => {
             saveTasks();
         });
 
+        const textContainer = document.createElement('div');
+        textContainer.classList.add('text-container');
+
         const span = document.createElement('span');
         span.textContent = text;
 
-        // Gestion de l'édition en cliquant sur toute la tâche
-        task.addEventListener('click', (e) => {
+        textContainer.appendChild(span);
+
+        // Gestion de l'édition en cliquant sur toute la zone du texte
+        textContainer.addEventListener('click', (e) => {
             e.stopPropagation();
-            const currentSpan = task.querySelector('span');
-            enterEditMode(task, currentSpan);
+            enterEditMode(task, textContainer);
         });
 
         // Créer l'icône de poubelle
@@ -63,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         task.appendChild(checkbox);
-        task.appendChild(span);
+        task.appendChild(textContainer);
         task.appendChild(deleteIcon);
 
         task.addEventListener('dragstart', dragStart);
@@ -72,16 +76,17 @@ document.addEventListener('DOMContentLoaded', () => {
         return task;
     }
 
-    function enterEditMode(task, span) {
+    function enterEditMode(task, textContainer) {
         // Quitter le mode édition de la tâche précédente
         if (currentlyEditingTask && currentlyEditingTask !== task) {
-            const input = currentlyEditingTask.querySelector('input[type="text"]');
+            const input = currentlyEditingTask.querySelector('.edit-input');
             if (input) {
                 // Annuler les modifications sur la tâche précédente
                 exitEditMode(currentlyEditingTask, input, false, currentlyEditingTask.onClickOutside);
             }
         }
 
+        const span = textContainer.querySelector('span');
         const originalText = span.textContent;
 
         // Créer un champ input pour l'édition
@@ -94,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
         input.dataset.originalText = originalText;
 
         // Remplacer le span par l'input
-        task.replaceChild(input, span);
+        textContainer.replaceChild(input, span);
         input.focus();
 
         // Mettre à jour la tâche actuellement en édition
@@ -136,7 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
             span.textContent = input.dataset.originalText;
         }
 
-        task.replaceChild(span, input);
+        const textContainer = task.querySelector('.text-container');
+        textContainer.replaceChild(span, input);
 
         // Supprimer l'écouteur d'événement du document
         document.removeEventListener('click', onClickOutside);
@@ -190,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const tasks = [];
             const taskList = column.querySelectorAll('.task');
             taskList.forEach(task => {
-                const textElement = task.querySelector('span');
+                const textElement = task.querySelector('.text-container span');
                 const text = textElement ? textElement.textContent : '';
                 const completed = task.querySelector('input[type="checkbox"]').checked;
                 tasks.push({ text, completed });
