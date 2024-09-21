@@ -42,8 +42,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const span = document.createElement('span');
         span.textContent = text;
 
+        // Créer l'icône de poubelle
+        const deleteIcon = document.createElement('span');
+        deleteIcon.classList.add('delete-icon');
+        deleteIcon.innerHTML = '&times;'; // Utilisation du symbole × comme icône
+
+        // Gestion de l'événement de suppression
+        deleteIcon.addEventListener('click', () => {
+            task.remove();
+            saveTasks();
+        });
+
         task.appendChild(checkbox);
         task.appendChild(span);
+        task.appendChild(deleteIcon);
 
         task.addEventListener('dragstart', dragStart);
         task.addEventListener('dragend', dragEnd);
