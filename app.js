@@ -42,13 +42,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const span = document.createElement('span');
         span.textContent = text;
 
+        // Gestion de l'édition
+        span.addEventListener('click', (e) => {
+            e.stopPropagation();
+            enterEditMode(task, span);
+        });
+
         // Créer l'icône de poubelle
         const deleteIcon = document.createElement('span');
         deleteIcon.classList.add('delete-icon');
-        deleteIcon.innerHTML = '&times;'; // Utilisation du symbole × comme icône
+        deleteIcon.innerHTML = '&times;';
 
-        // Gestion de l'événement de suppression
-        deleteIcon.addEventListener('click', () => {
+        deleteIcon.addEventListener('click', (e) => {
+            e.stopPropagation();
             task.remove();
             saveTasks();
         });
@@ -61,6 +67,61 @@ document.addEventListener('DOMContentLoaded', () => {
         task.addEventListener('dragend', dragEnd);
 
         return task;
+    }
+
+    function enterEditMode(task, span) {
+        const originalText = span.textContent;
+
+        // Créer un champ input pour l'édition
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = originalText;
+        input.classList.add('edit-input');
+
+        // Remplacer le span par l'input
+        task.replaceChild(input, span);
+        input.focus();
+
+        // Gestion de la sauvegarde lors de l'appui sur Entrée
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                exitEditMode(task, input, true);
+            }
+        });
+
+        // Gestion de l'annulation lors du clic en dehors
+        document.addEventListener('click', function onClickOutside(e) {
+            if (!task.contains(e.target)) {
+                exitEditMode(task, input, false);
+                document.removeEventListener('click', onClickOutside);
+            }
+        });
+
+        // Empêcher la propagation du clic à la tâche
+        input.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+    }
+
+    function exitEditMode(task, input, save) {
+        const newText = input.value.trim();
+        const span = document.createElement('span');
+
+        if (save && newText !== '') {
+            span.textContent = newText;
+        } else {
+            // Récupérer le texte original si annulation
+            span.textContent = input.defaultValue;
+        }
+
+        // Réattacher l'événement de clic pour l'édition
+        span.addEventListener('click', (e) => {
+            e.stopPropagation();
+            enterEditMode(task, span);
+        });
+
+        task.replaceChild(span, input);
+        saveTasks();
     }
 
     let draggedTask = null;
@@ -104,7 +165,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const tasks = [];
             const taskList = column.querySelectorAll('.task');
             taskList.forEach(task => {
-                const text = task.querySelector('span').textContent;
+                const textElement = task.querySelector('span');
+                const text = textElement ? textElement.textContent : '';
                 const completed = task.querySelector('input[type="checkbox"]').checked;
                 tasks.push({ text, completed });
             });
