@@ -15,6 +15,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    let isEditing = false;
+    let currentEditTask = null;
+    let currentEditInput = null;
+
     function addTask(column, input, taskList) {
         if (input.value.trim() === '') return;
         const task = createTaskElement(input.value);
@@ -70,6 +74,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function enterEditMode(task, span) {
+        if (isEditing) {
+            exitEditMode(currentEditTask, currentEditInput, false);
+        }
+
+        isEditing = true;
+        currentEditTask = task;
+
         const originalText = span.textContent;
 
         // Créer un champ input pour l'édition
@@ -96,7 +107,6 @@ document.addEventListener('DOMContentLoaded', () => {
         function onClickOutside(e) {
             if (!task.contains(e.target)) {
                 exitEditMode(task, input, false);
-                document.removeEventListener('click', onClickOutside);
             }
         }
 
@@ -106,27 +116,42 @@ document.addEventListener('DOMContentLoaded', () => {
         input.addEventListener('click', (e) => {
             e.stopPropagation();
         });
-    }
 
-    function exitEditMode(task, input, save) {
-        const newText = input.value.trim();
-        const span = document.createElement('span');
+        currentEditInput = input;
 
-        if (save && newText !== '') {
-            span.textContent = newText;
-        } else {
-            // Récupérer le texte original depuis l'attribut de données
-            span.textContent = input.dataset.originalText;
+        // Supprimer l'écouteur lors de la sortie du mode édition
+        function exitEditMode(task, input, save) {
+            const newText = input.value.trim();
+            const span = document.createElement('span');
+
+            if (save && newText !== '') {
+                span.textContent = newText;
+            } else {
+                // Récupérer le texte original depuis l'attribut de données
+                span.textContent = input.dataset.originalText;
+            }
+
+            // Réattacher l'événement de clic pour l'édition
+            span.addEventListener('click', (e) => {
+                e.stopPropagation();
+                enterEditMode(task, span);
+            });
+
+            task.replaceChild(span, input);
+
+            // Réinitialiser les variables d'édition
+            isEditing = false;
+            currentEditTask = null;
+            currentEditInput = null;
+
+            // Supprimer l'écouteur d'événement du document
+            document.removeEventListener('click', onClickOutside);
+
+            saveTasks();
         }
 
-        // Réattacher l'événement de clic pour l'édition
-        span.addEventListener('click', (e) => {
-            e.stopPropagation();
-            enterEditMode(task, span);
-        });
-
-        task.replaceChild(span, input);
-        saveTasks();
+        // Redéfinir exitEditMode pour avoir accès à onClickOutside
+        task.exitEditMode = exitEditMode;
     }
 
     let draggedTask = null;
@@ -162,4 +187,40 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
- 
+    function saveTasks() {
+        const data = {};
+
+        columns.forEach(column => {
+            const columnId = column.getAttribute('data-column');
+            const tasks = [];
+            const taskList = column.querySelectorAll('.task');
+            taskList.forEach(task => {
+                const textElement = task.querySelector('span');
+                const text = textElement ? textElement.textContent : '';
+                const completed = task.querySelector('input[type="checkbox"]').checked;
+                tasks.push({ text, completed });
+            });
+            data[columnId] = tasks;
+        });
+
+        localStorage.setItem('eisenhowerMatrixTasks', JSON.stringify(data));
+    }
+
+    function loadTasks() {
+        const data = JSON.parse(localStorage.getItem('eisenhowerMatrixTasks'));
+        if (!data) return;
+
+        columns.forEach(column => {
+            const columnId = column.getAttribute('data-column');
+            const taskList = column.querySelector('.task-list');
+            taskList.innerHTML = '';
+
+            if (data[columnId]) {
+                data[columnId].forEach(taskData => {
+                    const task = createTaskElement(taskData.text, taskData.completed);
+                    taskList.appendChild(task);
+                });
+            }
+        });
+    }
+});
